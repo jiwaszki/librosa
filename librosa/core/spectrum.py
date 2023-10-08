@@ -16,6 +16,8 @@ from .fft import get_fftlib
 from .audio import resample
 from .._cache import cache
 from .. import util
+from ..util import dtype_c2r, expand_to, fix_length, phasor, pad_center, tiny
+from ..util import MAX_MEM_BLOCK
 from ..util.exceptions import ParameterError
 from ..filters import get_window, semitone_filterbank
 from ..filters import window_sumsquare
@@ -506,8 +508,8 @@ def istft(
     ifft_window = get_window(window, win_length, fftbins=True)
 
     # Pad out to match n_fft, and add broadcasting axes
-    ifft_window = util.pad_center(ifft_window, size=n_fft)
-    ifft_window = util.expand_to(ifft_window, ndim=stft_matrix.ndim, axes=-2)
+    ifft_window = pad_center(ifft_window, size=n_fft)
+    ifft_window = expand_to(ifft_window, ndim=stft_matrix.ndim, axes=-2)
 
     # For efficiency, trim STFT frames according to signal length if available
     if length:
@@ -520,7 +522,7 @@ def istft(
         n_frames = stft_matrix.shape[-1]
 
     if dtype is None:
-        dtype = util.dtype_c2r(stft_matrix.dtype)
+        dtype = dtype_c2r(stft_matrix.dtype)
 
     shape = list(stft_matrix.shape[:-2])
     expected_signal_len = n_fft + hop_length * (n_frames - 1)
@@ -577,7 +579,7 @@ def istft(
         offset = 0
 
     n_columns = int(
-        util.MAX_MEM_BLOCK // (np.prod(stft_matrix.shape[:-1]) * stft_matrix.itemsize)
+        MAX_MEM_BLOCK // (np.prod(stft_matrix.shape[:-1]) * stft_matrix.itemsize)
     )
     n_columns = max(n_columns, 1)
 
@@ -608,9 +610,9 @@ def istft(
     else:
         start = 0
 
-    ifft_window_sum = util.fix_length(ifft_window_sum[..., start:], size=y.shape[-1])
+    ifft_window_sum = fix_length(ifft_window_sum[..., start:], size=y.shape[-1])
 
-    approx_nonzero_indices = ifft_window_sum > util.tiny(ifft_window_sum)
+    approx_nonzero_indices = ifft_window_sum > tiny(ifft_window_sum)
 
     y[..., approx_nonzero_indices] /= ifft_window_sum[approx_nonzero_indices]
 
@@ -1446,7 +1448,7 @@ def phase_vocoder(
         mag = (1.0 - alpha) * np.abs(columns[..., 0]) + alpha * np.abs(columns[..., 1])
 
         # Store to output array
-        d_stretch[..., t] = util.phasor(phase_acc, mag=mag)
+        d_stretch[..., t] = phasor(phase_acc, mag=mag)
 
         # Compute phase advance
         dphase = np.angle(columns[..., 1]) - np.angle(columns[..., 0]) - phi_advance

@@ -53,6 +53,7 @@ from numba import jit
 
 from ._cache import cache
 from . import util
+from .util import normalize, pad_center
 from .util.exceptions import ParameterError
 from .util.decorators import deprecated
 
@@ -1592,8 +1593,8 @@ def window_sumsquare(
 
     # Compute the squared window at the desired length
     win_sq = get_window(window, win_length)
-    win_sq = util.normalize(win_sq, norm=norm) ** 2
-    win_sq = util.pad_center(win_sq, size=n_fft)
+    win_sq = normalize(win_sq, norm=norm) ** 2
+    win_sq = pad_center(win_sq, size=n_fft)
 
     # Fill the envelope
     __window_ss_fill(x, win_sq, n_frames, hop_length)

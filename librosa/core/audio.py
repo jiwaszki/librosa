@@ -19,6 +19,7 @@ from .fft import get_fftlib
 from .convert import frames_to_samples, time_to_samples
 from .._cache import cache
 from .. import util
+from ..util import valid_audio
 from ..util.exceptions import ParameterError
 from ..util.decorators import deprecated
 from ..util.deprecation import Deprecated, rename_kw
@@ -501,7 +502,7 @@ def to_mono(y: np.ndarray) -> np.ndarray:
     (117601,)
     """
     # Validate the buffer.  Stereo is ok here.
-    util.valid_audio(y, mono=False)
+    valid_audio(y, mono=False)
 
     if y.ndim > 1:
         y = np.mean(y, axis=tuple(range(y.ndim - 1)))

@@ -40,6 +40,7 @@ from . import core
 from . import decompose
 from . import feature
 from . import util
+from .util import is_positive_int, fix_length
 from .util.exceptions import ParameterError
 from typing import Any, Callable, Iterable, Optional, Tuple, Union, overload
 from typing_extensions import Literal
@@ -320,7 +321,7 @@ def pitch_shift(
     >>> y_three_qt = librosa.effects.pitch_shift(y, sr=sr, n_steps=3,
     ...                                          bins_per_octave=24)
     """
-    if not util.is_positive_int(bins_per_octave):
+    if not is_positive_int(bins_per_octave):
         raise ParameterError(
             f"bins_per_octave={bins_per_octave} must be a positive integer."
         )
@@ -337,7 +338,7 @@ def pitch_shift(
     )
 
     # Crop to the same dimension as the input
-    return util.fix_length(y_shift, size=y.shape[-1])
+    return fix_length(y_shift, size=y.shape[-1])
 
 
 def remix(
